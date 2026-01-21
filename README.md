@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+StudyWeave
 
-## Getting Started
+StudyWeave is an adaptive learning web application that demonstrates how personalized learning paths can be designed using clear, rule-based decision logic. The project focuses on structured learning flow, system clarity, and adaptability rather than heavy AI or overengineered solutions.
 
-First, run the development server:
+This project was built as an interview assignment with a strong emphasis on reasoning, design trade-offs, and execution within tight time constraints.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Problem Statement
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Learners often struggle with one-size-fits-all learning experiences. Different users require different levels of difficulty, pacing, and reinforcement based on their performance and interactions.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+StudyWeave explores how adaptive learning can be implemented in a simple, transparent, and extensible way.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Solution Overview
 
-## Learn More
+StudyWeave adjusts the learning flow based on user performance signals such as accuracy, time spent, and retry attempts. Instead of using machine learning, the system relies on deterministic, rule-based logic to decide what content the learner should see next.
 
-To learn more about Next.js, take a look at the following resources:
+This approach keeps the system:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Easy to understand
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Debuggable
 
-## Deploy on Vercel
+Suitable for MVP-stage products
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Ready for future extension
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Key Features
+
+Adaptive lesson progression based on user performance
+
+Structured learning flow (lesson → question → feedback → next step)
+
+Rule-based decision engine
+
+Subject-agnostic content model
+
+Clean and minimal UI focused on usability
+
+Adaptivity Logic (High Level)
+
+The system evaluates user performance after each interaction and decides the next content type.
+
+Examples:
+
+Low accuracy → Reinforcement or concept review
+
+Medium accuracy → Practice content
+
+High accuracy → Increased difficulty or next topic
+
+High retries or time spent → Slower pacing or hints
+
+This logic is intentionally simple and transparent.
+
+System Design (Conceptual)
+
+Core components:
+
+Learner Interface
+
+Content Renderer
+
+Performance Tracker
+
+Adaptivity Engine
+
+Learning Flow Controller
+
+The design is modular so that rule-based logic can later be replaced or enhanced with ML models without changing the overall architecture.
+
+Scope & Constraints
+
+Designed and completed within a 2-day timeframe
+
+Focuses on core learning logic and system design
+
+No real AI/ML training involved
+
+No backend or persistence layer (can be added later)
+
+Future Enhancements
+
+Backend integration for user persistence
+
+Analytics dashboard for instructors
+
+ML-based recommendation engine
+
+Multi-subject content support
+
+A/B testing for adaptivity rules
+
+Why Rule-Based Adaptivity?
+
+For an MVP, rule-based systems are:
+
+Predictable
+
+Easier to test
+
+Faster to implement
+
+Safer for early-stage learning products
+
+This project intentionally prioritizes clarity and correctness over complexity.
+
+Author
+
+Abdulmateen M Shamsi
