@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-
+import Image from 'next/image';
 export default function Header() {
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -9,8 +9,8 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-xl font-bold text-slate-900">StudyWeave</span>
-          </Link>
+           <Image src="/images/logo.png" alt="StudyWeave Logo" width={63} height={64} />
+                </Link>
 
           {/* Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
