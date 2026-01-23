@@ -4,11 +4,12 @@ import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Sparkles, PlayCircle, BookOpen } from 'lucide-react'
+import { Sparkles, PlayCircle, BookOpen, Loader2, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 // Form validation schema
 const curriculumFormSchema = z.object({
@@ -25,6 +26,27 @@ const curriculumFormSchema = z.object({
 })
 
 type CurriculumFormValues = z.infer<typeof curriculumFormSchema>
+
+interface Lesson {
+  lessonTitle: string
+  lessonDescription: string
+  estimatedVideoDuration?: number
+  videoSearchIntent?: string
+  estimatedReadingTime?: number
+}
+
+interface Module {
+  moduleTitle: string
+  moduleDescription: string
+  lessons: Lesson[]
+}
+
+interface GeneratedCurriculum {
+  courseTitle: string
+  courseDescription: string
+  learningStyle: string
+  modules: Module[]
+}
 
 // Options data
 const readingLevels = [
@@ -46,6 +68,10 @@ const languages = [
 ]
 
 function CreateCourse() {
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [curriculum, setCurriculum] = useState<GeneratedCurriculum | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
   const form = useForm<CurriculumFormValues>({
     resolver: zodResolver(curriculumFormSchema),
     defaultValues: {
@@ -59,8 +85,135 @@ function CreateCourse() {
   })
 
   const onSubmit = async (data: CurriculumFormValues) => {
-    console.log('Curriculum form submitted:', data)
-    // Handle form submission
+    setIsGenerating(true)
+    setError(null)
+    setCurriculum(null)
+
+    try {
+      const response = await fetch('/api/generate-curriculum', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate curriculum')
+      }
+
+      setCurriculum(result.curriculum)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error generating curriculum:', err)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const resetForm = () => {
+    setCurriculum(null)
+    setError(null)
+    form.reset()
+  }
+
+  // Show generated curriculum
+  if (curriculum) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Success Header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-teal-light">
+              <CheckCircle2 className="w-6 h-6" style={{ color: 'var(--teal-primary)' }} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Curriculum Generated!</h1>
+              <p className="text-muted-foreground mt-1">Your personalized course is ready</p>
+            </div>
+          </div>
+
+          {/* Curriculum Display */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-2xl">{curriculum.courseTitle}</CardTitle>
+              <CardDescription className="text-base">{curriculum.courseDescription}</CardDescription>
+              <div className="flex gap-2 mt-4">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-light" style={{ color: 'var(--teal-primary)' }}>
+                  {curriculum.learningStyle === "visual" ? "📹 Video Learning" : "📖 Reading"}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {curriculum.modules.map((module, moduleIndex) => (
+                <div key={moduleIndex} className="mb-6 last:mb-0">
+                  <h3 className="text-xl font-semibold mb-2">
+                    Module {moduleIndex + 1}: {module.moduleTitle}
+                  </h3>
+                  <p className="text-muted-foreground mb-4">{module.moduleDescription}</p>
+                  
+                  <div className="space-y-3">
+                    {module.lessons.map((lesson, lessonIndex) => (
+                      <div 
+                        key={lessonIndex} 
+                        className="p-4 rounded-lg border border-border bg-muted/30"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium mb-1">
+                              Lesson {lessonIndex + 1}: {lesson.lessonTitle}
+                            </h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {lesson.lessonDescription}
+                            </p>
+                            {lesson.videoSearchIntent && (
+                              <p className="text-xs text-muted-foreground">
+                                🔍 Video keywords: {lesson.videoSearchIntent}
+                              </p>
+                            )}
+                          </div>
+                          <div className="ml-4 flex-shrink-0">
+                            {lesson.estimatedVideoDuration && (
+                              <span className="text-xs font-medium text-muted-foreground">
+                                ⏱️ {lesson.estimatedVideoDuration} min
+                              </span>
+                            )}
+                            {lesson.estimatedReadingTime && (
+                              <span className="text-xs font-medium text-muted-foreground">
+                                📚 {lesson.estimatedReadingTime} min
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+            <Button
+              onClick={resetForm}
+              variant="outline"
+              className="flex-1"
+            >
+              Create Another Course
+            </Button>
+            <Button
+              className="flex-1 hover:opacity-90"
+              style={{ backgroundColor: 'var(--teal-primary)', color: 'white' }}
+            >
+              Save to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -73,6 +226,15 @@ function CreateCourse() {
           </div>
           <h1 className="text-3xl font-bold text-foreground">Create New Curriculum</h1>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <Card className="mb-6 border-destructive">
+            <CardContent className="pt-6">
+              <p className="text-destructive font-medium">❌ {error}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Form */}
         <Form {...form}>
@@ -91,6 +253,7 @@ function CreateCourse() {
                       placeholder="e.g. Astrophysics, Roman History..."
                       {...field}
                       className="h-14 bg-teal-light/40 border-teal-light text-base"
+                      disabled={isGenerating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -107,7 +270,11 @@ function CreateCourse() {
                   <FormLabel className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                     Reading Level
                   </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    disabled={isGenerating}
+                  >
                     <FormControl>
                       <SelectTrigger className="h-14 bg-teal-light/40 border-teal-light text-base">
                         <SelectValue placeholder="Select reading level" />
@@ -145,6 +312,7 @@ function CreateCourse() {
                         min="5"
                         max="100"
                         className="h-14 bg-teal-light/40 border-teal-light text-base text-center"
+                        disabled={isGenerating}
                       />
                     </FormControl>
                     <FormMessage />
@@ -161,7 +329,11 @@ function CreateCourse() {
                     <FormLabel className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                       Language
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      disabled={isGenerating}
+                    >
                       <FormControl>
                         <SelectTrigger className="h-14 bg-teal-light/40 border-teal-light text-base">
                           <SelectValue placeholder="Select language" />
@@ -195,6 +367,7 @@ function CreateCourse() {
                       placeholder="Optional..."
                       {...field}
                       className="h-14 bg-teal-light/40 border-teal-light text-base"
+                      disabled={isGenerating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -217,11 +390,12 @@ function CreateCourse() {
                       <button
                         type="button"
                         onClick={() => field.onChange("visual")}
+                        disabled={isGenerating}
                         className={`h-16 px-6 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${
                           field.value === "visual"
                             ? 'border-teal-primary bg-teal-light'
                             : 'border-border bg-background hover:bg-muted'
-                        }`}
+                        } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <PlayCircle 
                           className="w-5 h-5" 
@@ -239,11 +413,12 @@ function CreateCourse() {
                       <button
                         type="button"
                         onClick={() => field.onChange("textbook")}
+                        disabled={isGenerating}
                         className={`h-16 px-6 rounded-xl border-2 transition-all flex items-center justify-center gap-3 ${
                           field.value === "textbook"
                             ? 'border-teal-primary bg-teal-light'
                             : 'border-border bg-background hover:bg-muted'
-                        }`}
+                        } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <BookOpen 
                           className="w-5 h-5" 
@@ -266,10 +441,18 @@ function CreateCourse() {
             {/* Submit Button */}
             <Button
               type="submit"
+              disabled={isGenerating}
               className="w-full h-14 text-base font-semibold rounded-xl hover:opacity-90"
               style={{ backgroundColor: 'var(--teal-primary)', color: 'white' }}
             >
-              Generate Curriculum
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Generating Curriculum...
+                </>
+              ) : (
+                'Generate Curriculum'
+              )}
             </Button>
           </form>
         </Form>
