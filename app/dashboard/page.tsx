@@ -1,9 +1,10 @@
 import React from 'react'
+import AddCourse from './_components/AddCourse'
 
 function page() {
   return (
     <div>
-      Dashboard content goes here
+   <AddCourse />
     </div>
   )
 }

@@ -9,7 +9,7 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-           <Image src="/images/logo.png" alt="StudyWeave Logo" width={63} height={64} />
+           <Image src="/images/logo.png" alt="StudyWeave Logo" width={128} height={128} />
                 </Link>
 
           {/* Navigation */}
