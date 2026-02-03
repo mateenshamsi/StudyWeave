@@ -10,8 +10,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { saveLayoutInDb } from '@/app/actions/courseActions'
+import { useRouter } from 'next/navigation'
+import { v4 as uuidv4 } from "uuid";
 
-// Form validation schema
 const curriculumFormSchema = z.object({
   topic: z.string().min(3, "Topic must be at least 3 characters."),
   readingLevel: z.string().min(1, "Please select a reading level."),
@@ -41,7 +43,7 @@ interface Module {
   lessons: Lesson[]
 }
 
-interface GeneratedCurriculum {
+export interface GeneratedCurriculum {
   courseTitle: string
   courseDescription: string
   learningStyle: string
@@ -69,8 +71,12 @@ const languages = [
 
 function CreateCourse() {
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [curriculum, setCurriculum] = useState<GeneratedCurriculum | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const router = useRouter()
+  const id = uuidv4();
 
   const form = useForm<CurriculumFormValues>({
     resolver: zodResolver(curriculumFormSchema),
@@ -116,7 +122,38 @@ function CreateCourse() {
   const resetForm = () => {
     setCurriculum(null)
     setError(null)
+    setSaveSuccess(false)
     form.reset()
+  }
+
+  const handleSave = async () => {
+    if (!curriculum) return
+
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      const courseData = {
+        topic: form.getValues('topic'),
+        readingLevel: form.getValues('readingLevel'),
+        age: form.getValues('age'),
+        language: form.getValues('language'),
+        priorKnowledge: form.getValues('priorKnowledge'),
+        learningStyle: form.getValues('learningStyle'),
+        curriculum,
+      }
+
+      await saveLayoutInDb(courseData)
+      setSaveSuccess(true)
+      router.replace( '/create-course/'+id )
+
+    
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save course')
+      console.error('Error saving course:', err)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   // Show generated curriculum
@@ -201,14 +238,29 @@ function CreateCourse() {
               onClick={resetForm}
               variant="outline"
               className="flex-1"
+              disabled={isSaving}
             >
               Create Another Course
             </Button>
             <Button
+              onClick={handleSave}
+              disabled={isSaving || saveSuccess}
               className="flex-1 hover:opacity-90"
               style={{ backgroundColor: 'var(--teal-primary)', color: 'white' }}
             >
-              Save to Dashboard
+              {saveSuccess ? (
+                <>
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                  Saved Successfully!
+                </>
+              ) : isSaving ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save to Dashboard'
+              )}
             </Button>
           </div>
         </div>
